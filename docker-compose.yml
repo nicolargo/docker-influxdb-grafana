@@ -1,0 +1,15 @@
+influxdb:
+  image: tutum/influxdb:latest
+  ports:
+    - "8083:8083"
+    - "8086:8086"
+    - "8090:8090"
+  env_file:
+    - 'env.influxdb'
+
+grafana:
+  image: grafana/grafana:latest
+  ports:
+    - "3000:3000"
+  links:
+    - influxdb
