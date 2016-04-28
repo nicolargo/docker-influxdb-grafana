@@ -32,4 +32,5 @@ Update it:
 git pull
 docker pull grafana/grafana
 docker pull tutum/influxdb
+pip install --upgrade docker-compose
 ```
