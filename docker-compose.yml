@@ -1,5 +1,5 @@
 influxdb:
-  image: tutum/influxdb:latest
+  image: influxdb:latest
   ports:
     - "8083:8083"
     - "8086:8086"
