@@ -8,13 +8,13 @@ influxdb:
   env_file:
     - 'env.influxdb'
   volumes:
-    # Data persistency
-    # sudo mkdir -p /srv/docker/influxdb/data
-    - /srv/docker/influxdb/data:/var/lib/influxdb
+    - ./data:/var/lib/influxdb
 
 telegraf:
   image: telegraf:latest
   container_name: telegraf
+  ports:
+    - "8125:8125"
   links:
     - influxdb
   volumes:
