@@ -47,3 +47,16 @@ If you want to run Telegraf, edit the telegraf.conf to yours needs and:
 ```
 docker exec telegraf telegraf
 ```
+
+Install nc on telegraf host:
+```
+docker exec -it telegraf /bin/bash
+apt update
+apt install netcat
+```
+
+Run the influx CLI:
+```
+docker exec -it influxdb influx
+```
+
