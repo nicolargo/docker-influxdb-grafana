@@ -6,7 +6,9 @@ docker-compose up --build --force-recreate -d
 ```
 
 **Grafana** is available at [http://localhost:3000](http://localhost:3000)
+
 **statsd** can be written to using `echo "mycounter:10|c" | nc -C -w 1 -u ${host_ip} 8125`
+
 **influxdb** prompt `docker exec -it influxdb influx`
 
 To add a new grafana dashboard:
