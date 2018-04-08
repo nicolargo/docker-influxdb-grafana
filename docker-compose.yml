@@ -1,31 +1,42 @@
-influxdb:
-  image: influxdb:latest
-  container_name: influxdb
-  ports:
-    - "8083:8083"
-    - "8086:8086"
-    - "8090:8090"
-  env_file:
-    - 'env.influxdb'
-  volumes:
-    # Data persistency
-    # sudo mkdir -p /srv/docker/influxdb/data
-    - /srv/docker/influxdb/data:/var/lib/influxdb
+version: "3"
+services:
 
-telegraf:
-  image: telegraf:latest
-  container_name: telegraf
-  links:
-    - influxdb
-  volumes:
-    - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+      - "8090:8090"
+    env_file:
+      - 'env.influxdb'
+    volumes:
+      - ./data:/var/lib/influxdb
+    networks:
+      - tig-net
+  
+  telegraf:
+    build:
+      context: .
+      dockerfile: Dockerfile_telegraf
+    container_name: telegraf
+    ports:
+      - "8125:8125/udp"
+    networks:
+      - tig-net
+  
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile_grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    env_file:
+      - 'env.grafana'
+    networks:
+      - tig-net
 
-grafana:
-  image: grafana/grafana:latest
-  container_name: grafana
-  ports:
-    - "3000:3000"
-  env_file:
-    - 'env.grafana'
-  links:
-    - influxdb
+networks:
+  tig-net:
+

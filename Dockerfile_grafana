@@ -1,0 +1,7 @@
+FROM grafana/grafana:latest
+COPY grafana/provisioning/datasources/ /usr/share/grafana/conf/provisioning/datasources/
+COPY grafana/provisioning/dashboards/ /usr/share/grafana/conf/provisioning/dashboards/
+COPY grafana/dashboards/ /var/lib/grafana/dashboards/
+WORKDIR /
+RUN apt-get update && apt-get install -y net-tools vim
+CMD ["grafana"]
