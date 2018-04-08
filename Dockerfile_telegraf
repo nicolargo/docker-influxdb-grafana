@@ -1,0 +1,5 @@
+FROM telegraf:latest
+ADD ./telegraf.conf /etc/telegraf/telegraf.conf
+WORKDIR /
+RUN apt-get update && apt-get install -y netcat net-tools
+CMD ["telegraf"]

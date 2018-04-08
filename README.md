@@ -53,6 +53,7 @@ Install nc on telegraf host:
 docker exec -it telegraf /bin/bash
 apt update
 apt install netcat
+apt install net-tools   # install netstat
 ```
 
 Run the influx CLI:
