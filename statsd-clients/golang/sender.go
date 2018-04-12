@@ -47,7 +47,7 @@ func (s *statsdSender) Send() error {
 		s.wg.Add(1)
 		defer s.wg.Done()
 
-		t := time.NewTicker(500 * time.Millisecond)
+		t := time.NewTicker(5 * time.Second)
 		defer t.Stop()
 
 		for {
@@ -55,10 +55,10 @@ func (s *statsdSender) Send() error {
 			case <-t.C:
 				seelog.Tracef(`firing stats`)
 
-				cnt := int(math.Floor(rand.ExpFloat64() / 100.0))
+				cnt := int(math.Floor((rand.NormFloat64() / 0.1) + 50))
 				s.stats.Count("mycount", cnt)
 
-				dur := int(math.Floor(rand.ExpFloat64() / 50.0))
+				dur := int(math.Floor(rand.ExpFloat64() / 0.001))
 				s.stats.Timing("mytiming", dur)
 
 				seelog.Debugf(`fired stats - cnt: %d  dur: %d`, cnt, dur)
