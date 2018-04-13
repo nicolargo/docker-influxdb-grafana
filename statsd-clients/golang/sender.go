@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 )
@@ -32,12 +33,18 @@ func NewStatsdSender(statsdAddr string) StatsdSender {
 
 func (s *statsdSender) Send() error {
 
-	seelog.Infof(`connecting to statsd at '%s'`, s.statsdAddr)
 	var err error
+	var host string
+	if host, err = os.Hostname(); err != nil {
+		seelog.Warn("hostname error: ", err)
+		host = "default"
+	}
+
+	seelog.Infof(`connecting to statsd at '%s'`, s.statsdAddr)
 	s.stats, err = statsd.New(
 		statsd.Address(s.statsdAddr),
 		statsd.TagsFormat(statsd.InfluxDB),
-		statsd.Tags("host", "pgoMac", "service", "golang-statsd"),
+		statsd.Tags("cluster", "tigcluster", "host", host, "service", "golang-statsd"),
 	)
 	if err != nil {
 		return seelog.Errorf("statsdFeed statsd.New error: %v", err)
@@ -50,6 +57,8 @@ func (s *statsdSender) Send() error {
 		t := time.NewTicker(5 * time.Second)
 		defer t.Stop()
 
+		g := newGrowShrinker(0, 100)
+
 		for {
 			select {
 			case <-t.C:
@@ -58,10 +67,13 @@ func (s *statsdSender) Send() error {
 				cnt := int(math.Floor((rand.NormFloat64() / 0.1) + 50))
 				s.stats.Count("mycount", cnt)
 
-				dur := int(math.Floor(rand.ExpFloat64() / 0.001))
+				dur := math.Floor(rand.ExpFloat64() / 0.001)
 				s.stats.Timing("mytiming", dur)
 
-				seelog.Debugf(`fired stats - cnt: %d  dur: %d`, cnt, dur)
+				qlen := g.sample()
+				s.stats.Gauge("myguage", qlen)
+
+				seelog.Debugf(`fired stats - cnt: %d  dur: %f  qlen: %d`, cnt, dur, qlen)
 
 				break
 
@@ -85,4 +97,34 @@ func (s *statsdSender) Close() error {
 	s.wg.Wait()
 
 	return nil
+}
+
+type growShrinker struct {
+	dir, val, min, max int
+}
+
+func newGrowShrinker(min, max int) *growShrinker {
+	return &growShrinker{0, min + (max-min)/2, min, max}
+}
+
+func (g *growShrinker) sample() int {
+
+	dirDelta := int(math.Floor((rand.NormFloat64() / 0.5) + .5))
+
+	if (dirDelta < 0) && (g.val <= g.min) {
+		g.val = g.min
+		g.dir = 0
+		return g.val
+	}
+	if (dirDelta > 0) && (g.val >= g.max) {
+		g.val = g.max
+		g.dir = 0
+		return g.val
+	}
+
+	g.dir += dirDelta
+	g.val += g.dir
+	g.val = int(math.Min(math.Max(float64(g.val), float64(g.min)), float64(g.max)))
+
+	return g.val
 }
