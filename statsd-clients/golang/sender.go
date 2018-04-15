@@ -19,7 +19,7 @@ type StatsdSender interface {
 type statsdSender struct {
 	statsdAddr string
 	closeChan  chan bool
-	stats      *statsd.Client
+	stats      MetricsReporter
 	wg         *sync.WaitGroup
 }
 
@@ -33,19 +33,9 @@ func NewStatsdSender(statsdAddr string) StatsdSender {
 
 func (s *statsdSender) Send() error {
 
-	var err error
-	var host string
-	if host, err = os.Hostname(); err != nil {
-		seelog.Warn("hostname error: ", err)
-		host = "default"
-	}
-
 	seelog.Infof(`connecting to statsd at '%s'`, s.statsdAddr)
-	s.stats, err = statsd.New(
-		statsd.Address(s.statsdAddr),
-		statsd.TagsFormat(statsd.InfluxDB),
-		statsd.Tags("cluster", "tigcluster", "host", host, "service", "golang-statsd"),
-	)
+	var err error
+	s.stats, err = NewMetricsReporter(s.statsdAddr, "gitcluster", "golang-statsd")
 	if err != nil {
 		return seelog.Errorf("statsdFeed statsd.New error: %v", err)
 	}
@@ -97,6 +87,29 @@ func (s *statsdSender) Close() error {
 	s.wg.Wait()
 
 	return nil
+}
+
+type MetricsReporter interface {
+	Count(field string, val interface{})
+	Timing(field string, val interface{})
+	Gauge(field string, val interface{})
+	Close()
+}
+
+func NewMetricsReporter(endpoint, clusterid, service string) (MetricsReporter, error) {
+
+	var err error
+	var host string
+	if host, err = os.Hostname(); err != nil {
+		seelog.Warn("hostname error: ", err)
+		host = "default"
+	}
+
+	return statsd.New(
+		statsd.Address(endpoint),
+		statsd.TagsFormat(statsd.InfluxDB),
+		statsd.Tags("cluster", clusterid, "host", host, "service", service),
+	)
 }
 
 type growShrinker struct {
