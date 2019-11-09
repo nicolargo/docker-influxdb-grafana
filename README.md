@@ -16,7 +16,9 @@ docker pull telegraf
 Run your stack:
 
 ```
+sudo mkdir -p /srv/docker/grafana/data
 docker-compose up -d
+sudo chown -R 472:472 /srv/docker/grafana/data
 
 ```
 
