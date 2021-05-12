@@ -5,6 +5,7 @@ influxdb:
     - "8083:8083"
     - "8086:8086"
     - "8090:8090"
+    - "2003:2003"
   env_file:
     - 'env.influxdb'
   volumes:
